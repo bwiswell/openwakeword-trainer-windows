@@ -1,0 +1,17 @@
+model_name: "example"
+
+target_phrases:
+  - "example phrase"
+  - "another example"
+
+negative_phrases:
+  - "not this phrase"
+  - "nor this one"
+
+training_samples: 1000
+testing_samples: 300
+
+layer_size: 64
+
+steps: 50000
+target_fp: 0.2
