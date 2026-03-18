@@ -49,9 +49,9 @@ class Config:
             'ACAV100M_sample': str(OWW_FEATURES.path(dm.resource_path))
         }
         train['batch_n_per_class'] = {
-            "ACAV100M_sample": 512,
-            "adversarial_negative": 25,
-            "positive": 25
+            "ACAV100M_sample": 1024,
+            "adversarial_negative": 50,
+            "positive": 50
         }
         train['layer_size'] = self.layer_size
         train['steps'] = self.steps
