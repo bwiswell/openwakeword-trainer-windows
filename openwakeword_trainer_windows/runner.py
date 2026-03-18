@@ -75,10 +75,10 @@ class Runner:
 
     ### METHODS ###
     def run (self):
-        self._patch()
         self._ensure()
         self._download()
         self._unpack()
+        self._patch()
         self._configure()
         self._tts()
         self._augment()

@@ -54,6 +54,7 @@ class GitResource(Resource):
                 for slug in data_dir_slugs:
                     dir_path /= slug
                 dir_path.mkdir(parents=True, exist_ok=True)
+            subprocess.run(['poetry', 'run', 'python', '-m', 'pip', 'install', '-e', './openwakeword'])
             Logger.log(f'✅ {self.name} successfully unpacked')
 
 
