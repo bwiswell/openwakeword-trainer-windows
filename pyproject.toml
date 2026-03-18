@@ -1,0 +1,42 @@
+[project]
+name = "openwakeword-trainer-windows"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Benj Wiswell",email = "benjwiswell@gmail.com"}
+]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "huggingface-hub (>=1.7.1,<2.0.0)",
+    "datasets (>=4.8.2,<5.0.0)",
+    "soundfile (>=0.13.1,<0.14.0)",
+    "pyaudio (>=0.2.14,<0.3.0)",
+    "tqdm (>=4.67.3,<5.0.0)",
+    "kokoro (>=0.9.4,<0.10.0)",
+    "torchinfo (>=1.8.0,<2.0.0)",
+    "torchmetrics (>=1.9.0,<2.0.0)",
+    "scipy (<1.17.0)",
+    "pronouncing (>=0.2.0,<0.3.0)",
+    "setuptools (<82.0.0)",
+    "audiomentations (>=0.43.1,<0.44.0)",
+    "torch-audiomentations (>=0.12.0,<0.13.0)",
+    "speechbrain (>=1.0.3,<2.0.0)",
+    "torch (==2.8.0)",
+    "torchaudio (==2.8.0)",
+    "mutagen (>=1.47.0,<2.0.0)",
+    "acoustics (>=0.2.6,<0.3.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+[[tool.poetry.source]]
+name = "pytorch_gpu"
+url = "https://download.pytorch.org/whl/cu129"
+priority = "explicit"
+
+
+[tool.poetry.dependencies]
+torch = {source = "pytorch_gpu"}
+torchaudio = {source = "pytorch_gpu"}
