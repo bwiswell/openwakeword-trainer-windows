@@ -47,6 +47,10 @@ class Runner:
         Logger.start_phase('Ensuring Paths')
         self.dm.ensure_paths()
 
+    def _export (self):
+        Logger.start_phase('Exporting Models')
+        self.dm.export()
+
     def _patch (self):
         Logger.start_phase('Applying Patches')
         Logger.log('🚀 patching dependencies...')
@@ -83,3 +87,4 @@ class Runner:
         self._tts()
         self._augment()
         self._train()
+        self._export()

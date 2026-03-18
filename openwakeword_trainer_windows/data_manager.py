@@ -71,6 +71,7 @@ class DataManager:
 
     def ensure_paths (self):
         Logger.log('🚀 (re)creating resource paths...')
+        self.output_path.mkdir(parents=True, exist_ok=True)
         self.cache_path.mkdir(parents=True, exist_ok=True)
         self.dataset_path.mkdir(parents=True, exist_ok=True)
         self.record_path.mkdir(parents=True, exist_ok=True)
@@ -83,6 +84,21 @@ class DataManager:
         self.neg_test.mkdir()
         self.wav_path.mkdir(parents=True, exist_ok=True)
         Logger.log('✨ all resources paths created')
+
+    def export (self):
+        Logger.log('🚀 exporting models...')
+        onnx_in = self.training_path / f'{self.model}.onnx'
+        tflite_in = self.training_path / f'{self.model}.tflite'
+        if not onnx_in.exists() or not tflite_in.exists():
+            Logger.log(f'❌ models unvailable for export')
+            raise RuntimeError()
+        onnx_out = self.output_path / f'{self.model}.onnx'
+        tflite_out = self.output_path / f'{self.model}.tflite'
+        if onnx_out.exists(): os.remove(onnx_out)
+        if tflite_out.exists(): os.remove(tflite_out)
+        os.rename(onnx_in, onnx_out)
+        os.rename(tflite_in, tflite_out)
+        Logger.log('✨ all models exported')
         
     def tts_path (self, slug: str) -> Path:
         return self.wav_path / slug
