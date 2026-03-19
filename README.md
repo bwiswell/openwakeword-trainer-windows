@@ -23,6 +23,15 @@
 - ...profit? Or at least use your custom home assistant
 
 
+## CLI Arguments
+
+`poetry run python -m openwakeword_trainer_windows <model-name> -d <data-path> -o <output-path>`
+
+- `<model-name>`: The model to train (should be the same as your `.yaml` name, use underscores instead of spaces).
+- `<data-path>`: Optional, path where downloaded datasets and features should be stored (~50GB), as well as recorded/generated TTS samples. Defaults to `<repo-directory>/data`.
+- `<output-path>`: Optional, path where the final `.onnx` and `.tflite` models should be stored. Defaults to `<repo-directory>/output`.
+
+
 ## Note
 
 This README is obviously very incomplete. More to follow - just note that there is ~50GB of data that this pipeline will download/extract - you'll need a lot of space.
