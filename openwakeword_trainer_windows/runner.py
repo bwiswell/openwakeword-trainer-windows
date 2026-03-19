@@ -84,13 +84,13 @@ class Runner:
 
     ### METHODS ###
     def run (self):
-        #self._ensure()
-        #self._download()
-        #self._unpack()
-        #self._patch()
-        #self._configure()
-        #self._record()
-        #self._tts()
-        #self._augment()
-        #self._train()
+        self._ensure()
+        self._download()
+        self._unpack()
+        self._patch()
+        self._configure()
+        self._record()
+        self._tts()
+        self._augment()
+        self._train()
         self._export()

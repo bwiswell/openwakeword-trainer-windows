@@ -2,6 +2,8 @@ import itertools as it
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 from typing import Optional
 
 from .logger import Logger
@@ -111,16 +113,26 @@ class DataManager:
     def export (self):
         Logger.log('🚀 exporting models...')
         onnx_in = self.training_path / f'{self.model}.onnx'
-        #tflite_in = self.training_path / f'{self.model}.tflite'
-        if not onnx_in.exists():# or not tflite_in.exists():
-            Logger.log(f'❌ models unvailable for export')
+        if not onnx_in.exists():
+            Logger.log(f'❌ no Onnx model found')
+            raise RuntimeError()
+        Logger.log('🔄 converting Onnx model to TFLite...')
+        subprocess.run([
+            sys.executable, '-m', 'onnx2tf',
+            '-i', str(onnx_in),
+            '-o', str(self.train_path),
+            '-tb', 'flatbuffer_direct'
+        ], check=True)
+        tflite_in = self.train_path / f'{self.model}_float32.tflite'
+        if not tflite_in.exists():
+            Logger.log(f'❌ TFLite conversion failed')
             raise RuntimeError()
         onnx_out = self.output_path / f'{self.model}.onnx'
-        #tflite_out = self.output_path / f'{self.model}.tflite'
+        tflite_out = self.output_path / f'{self.model}.tflite'
         if onnx_out.exists(): os.remove(onnx_out)
-        #if tflite_out.exists(): os.remove(tflite_out)
+        if tflite_out.exists(): os.remove(tflite_out)
         os.rename(onnx_in, onnx_out)
-        #os.rename(tflite_in, tflite_out)
+        os.rename(tflite_in, tflite_out)
         Logger.log('✨ all models exported')
 
     def unpack (self):
