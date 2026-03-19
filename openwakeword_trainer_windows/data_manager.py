@@ -41,7 +41,11 @@ class DataManager:
         self.wav_path = self.data_path / 'wavs'
 
         self.config_path = DataManager.PARENT / 'configs' / f'{model}.yaml'
+
         self.record_path = self.data_path / 'recordings' / model
+        self.record_pos_path = self.record_path / 'positive'
+        self.record_neg_path = self.record_path / 'negative'
+
         self.train_path = self.data_path / 'training' / model
         self.train_conf_path = self.train_path / f'{model}.yaml'
         self.training_path = self.data_path / 'training'
@@ -50,6 +54,24 @@ class DataManager:
         self.neg_train = self.train_path / 'negative_train'
         self.pos_test = self.train_path / 'positive_test'
         self.neg_test = self.train_path / 'negative_test'
+
+
+    ### PROPERTIES ###
+    @property
+    def n_train_neg (self) -> int:
+        return len(list(self.neg_train.glob('*.wav')))
+    
+    @property
+    def n_train_pos (self) -> int:
+        return len(list(self.pos_train.glob('*.wav')))
+
+    @property
+    def n_recorded_neg (self) -> int:
+        return len(list(self.record_neg_path.glob('*.wav')))
+    
+    @property
+    def n_recorded_pos (self) -> int:
+        return len(list(self.record_pos_path.glob('*.wav')))
 
 
     ### METHODS ###
@@ -74,7 +96,8 @@ class DataManager:
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.cache_path.mkdir(parents=True, exist_ok=True)
         self.dataset_path.mkdir(parents=True, exist_ok=True)
-        self.record_path.mkdir(parents=True, exist_ok=True)
+        self.record_pos_path.mkdir(parents=True, exist_ok=True)
+        self.record_neg_path.mkdir(parents=True, exist_ok=True)
         self.resource_path.mkdir(parents=True, exist_ok=True)
         if self.train_path.exists(): shutil.rmtree(self.train_path)
         self.train_path.mkdir(parents=True)
@@ -93,15 +116,12 @@ class DataManager:
             Logger.log(f'❌ models unvailable for export')
             raise RuntimeError()
         onnx_out = self.output_path / f'{self.model}.onnx'
-        tflite_out = self.output_path / f'{self.model}.tflite'
+        #tflite_out = self.output_path / f'{self.model}.tflite'
         if onnx_out.exists(): os.remove(onnx_out)
-        if tflite_out.exists(): os.remove(tflite_out)
+        #if tflite_out.exists(): os.remove(tflite_out)
         os.rename(onnx_in, onnx_out)
-        os.rename(tflite_in, tflite_out)
+        #os.rename(tflite_in, tflite_out)
         Logger.log('✨ all models exported')
-        
-    def tts_path (self, slug: str) -> Path:
-        return self.wav_path / slug
 
     def unpack (self):
         Logger.log('🚀 starting resource unpacking...')
