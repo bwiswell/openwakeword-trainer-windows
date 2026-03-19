@@ -1,4 +1,3 @@
-import os
 import sys
 import subprocess
 from typing import Optional
@@ -6,6 +5,7 @@ from typing import Optional
 from .config import Config
 from .data_manager import DataManager
 from .logger import Logger
+from .recorder import Recorder
 from .tts import TTS
 from .util import patch_all
 
@@ -47,11 +47,20 @@ class Runner:
         Logger.start_phase('Ensuring Paths')
         self.dm.ensure_paths()
 
+    def _export (self):
+        Logger.start_phase('Exporting Models')
+        self.dm.export()
+
     def _patch (self):
         Logger.start_phase('Applying Patches')
         Logger.log('🚀 patching dependencies...')
         patch_all()
         Logger.log('✨ dependencies patched')
+
+    def _record (self):
+        Logger.start_phase('Recording Samples')
+        recorder = Recorder(self.config, self.dm)
+        recorder.record_samples()
 
     def _train (self):
         Logger.start_phase('Training Model')
@@ -59,7 +68,7 @@ class Runner:
         subprocess.run([
             sys.executable, str(DataManager.SCRIPT_PATH),
             '--training_config', str(self.dm.train_conf_path),
-            '--train_model'
+            '--train_model'#, '--convert_to_tflite'
         ], check=True)
         Logger.log('✨ training complete')
 
@@ -75,11 +84,13 @@ class Runner:
 
     ### METHODS ###
     def run (self):
-        self._patch()
         self._ensure()
         self._download()
         self._unpack()
+        self._patch()
         self._configure()
+        self._record()
         self._tts()
         self._augment()
         self._train()
+        self._export()

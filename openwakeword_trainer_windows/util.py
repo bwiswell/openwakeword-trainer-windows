@@ -66,7 +66,7 @@ PIPER_NEW = '''\
         from generate_samples import generate_samples'''
 
 
-TRAIN_OLD = '''\
+FEATURES_OLD = '''\
             compute_features_from_generator(positive_clips_train_generator, n_total=len(os.listdir(positive_train_output_dir)),
                                             clip_duration=config["total_length"],
                                             output_file=os.path.join(feature_save_dir, "positive_features_train.npy"),
@@ -91,7 +91,7 @@ TRAIN_OLD = '''\
                                             device="gpu" if torch.cuda.is_available() else "cpu",
                                             ncpu=n_cpus if not torch.cuda.is_available() else 1)'''
 
-TRAIN_NEW = '''\
+FEATURES_NEW = '''\
             
             from openwakeword.data import trim_mmap
             import shutil
@@ -145,11 +145,44 @@ TRAIN_NEW = '''\
             shutil.move(temp_path, output_path)'''
 
 
+TRAIN_VAL_FP_OLD = '''\
+            batch_size=len(X_val_fp_labels)'''
+
+TRAIN_VAL_FP_NEW = '''\
+            batch_size=100'''
+
+
+TRAIN_VAL_OLD = '''\
+            batch_size=len(labels)'''
+
+TRAIN_VAL_NEW = '''\
+            batch_size=100'''
+
+
 UTILS_OLD = '''\
     trim_mmap(output_file)'''
 
 UTILS_NEW = '''\
     #trim_mmap(output_file)'''
+
+
+EXPORT_OLD = '''\
+        if args.convert_to_tflite:
+            convert_onnx_to_tflite(os.path.join(config["output_dir"], config["model_name"] + ".onnx"),
+                                   os.path.join(config["output_dir"], config["model_name"] + ".tflite"))'''
+
+EXPORT_NEW = '''\
+        '''
+
+
+WARNINGS_OLD = '''\
+import torch'''
+
+WARNINGS_NEW = '''\
+import warnings
+warnings.filterwarnings('ignore')
+import torch
+'''
 
 
 def patch (name: str, path: Path, old: str, new: str):
@@ -168,5 +201,9 @@ def patch_all ():
     patch('piper', DataManager.SCRIPT_PATH, PIPER_OLD, PIPER_NEW)
     patch('data', DataManager.SCRIPT_DATA_PATH, DATA_OLD, DATA_NEW)
     patch('load', DataManager.SCRIPT_PATH, LOAD_OLD, LOAD_NEW)
-    patch('train', DataManager.SCRIPT_PATH, TRAIN_OLD, TRAIN_NEW)
+    patch('features', DataManager.SCRIPT_PATH, FEATURES_OLD, FEATURES_NEW)
+    patch('false positives', DataManager.SCRIPT_PATH, TRAIN_VAL_FP_OLD, TRAIN_VAL_FP_NEW)
+    patch('validation', DataManager.SCRIPT_PATH, TRAIN_VAL_OLD, TRAIN_VAL_NEW)
     patch('utils', DataManager.SCRIPT_UTILS_PATH, UTILS_OLD, UTILS_NEW)
+    patch('export', DataManager.SCRIPT_PATH, EXPORT_OLD, EXPORT_NEW)
+    #patch('warnings', DataManager.SCRIPT_PATH, WARNINGS_OLD, WARNINGS_NEW)
