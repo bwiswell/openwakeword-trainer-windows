@@ -74,12 +74,11 @@ class TTS:
                 phrase: str,
                 speeds: list[float]
             ):
-        step = len(speeds)
-        n = 100 * step
+        n = 100 * len(speeds)
         pbar = tq.tqdm(total=n, desc=f'Generating samples for "{phrase}"')
         for i, (voice, speed) in enumerate(it.product(TTS.VOICES, speeds)):
             self._generate(
-                index + i * step,
+                index + i * 5,
                 output,
                 phrase,
                 voice,
@@ -90,6 +89,7 @@ class TTS:
     def _generate_split (
                 self,
                 output: Path,
+                index: int,
                 phrases: list[str],
                 samples_per_phrase: int
             ):
@@ -97,7 +97,7 @@ class TTS:
         speeds = list(np.linspace(0.7, 1.3, n_speeds))
         for i, phrase in enumerate(phrases):
             self._generate_batch(
-                i * samples_per_phrase,
+                index + i * samples_per_phrase,
                 output,
                 phrase,
                 speeds
@@ -113,6 +113,13 @@ class TTS:
             'positive testing',
             'negative training',
             'negative testing'
+        ]
+
+        indices = [
+            dm.n_train_pos,
+            0,
+            dm.n_train_neg,
+            0
         ]
 
         phase_phrases = [
@@ -140,11 +147,12 @@ class TTS:
             dm.neg_test
         ]
 
-        zipped = zip(splits, phase_phrases, counts, paths)
-        for s_type, phrases, count, path in zipped:
+        zipped = zip(splits, indices, phase_phrases, counts, paths)
+        for s_type, index, phrases, count, path in zipped:
             Logger.log(f'🔄 generating {s_type} samples...')
             self._generate_split(
                 path,
+                index,
                 phrases,
                 count
             )

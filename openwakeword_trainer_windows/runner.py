@@ -68,7 +68,7 @@ class Runner:
         subprocess.run([
             sys.executable, str(DataManager.SCRIPT_PATH),
             '--training_config', str(self.dm.train_conf_path),
-            '--train_model', '--convert_to_tflite'
+            '--train_model'#, '--convert_to_tflite'
         ], check=True)
         Logger.log('✨ training complete')
 
@@ -84,13 +84,13 @@ class Runner:
 
     ### METHODS ###
     def run (self):
-        self._ensure()
-        self._download()
-        self._unpack()
-        self._patch()
-        self._configure()
-        self._tts()
-        self._record()
-        self._augment()
-        self._train()
+        #self._ensure()
+        #self._download()
+        #self._unpack()
+        #self._patch()
+        #self._configure()
+        #self._record()
+        #self._tts()
+        #self._augment()
+        #self._train()
         self._export()

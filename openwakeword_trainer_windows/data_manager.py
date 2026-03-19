@@ -111,8 +111,8 @@ class DataManager:
     def export (self):
         Logger.log('🚀 exporting models...')
         onnx_in = self.training_path / f'{self.model}.onnx'
-        tflite_in = self.training_path / f'{self.model}.tflite'
-        if not onnx_in.exists() or not tflite_in.exists():
+        #tflite_in = self.training_path / f'{self.model}.tflite'
+        if not onnx_in.exists():# or not tflite_in.exists():
             Logger.log(f'❌ models unvailable for export')
             raise RuntimeError()
         onnx_out = self.output_path / f'{self.model}.onnx'
