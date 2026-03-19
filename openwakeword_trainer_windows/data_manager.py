@@ -143,7 +143,6 @@ class DataManager:
             for fr in FEATURE_RESOURCES:
                 fr.unpack(self.resource_path, self.resource_path)
             for mr in MODEL_RESOURCES:
-                print(DataManager.MODEL_PATH)
                 mr.unpack(self.resource_path, DataManager.MODEL_PATH)
             for wr in WAV_RESOURCES:
                 wr.unpack(self.dataset_path, self.wav_path)

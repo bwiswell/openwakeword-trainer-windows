@@ -166,6 +166,25 @@ UTILS_NEW = '''\
     #trim_mmap(output_file)'''
 
 
+EXPORT_OLD = '''\
+        if args.convert_to_tflite:
+            convert_onnx_to_tflite(os.path.join(config["output_dir"], config["model_name"] + ".onnx"),
+                                   os.path.join(config["output_dir"], config["model_name"] + ".tflite"))'''
+
+EXPORT_NEW = '''\
+        '''
+
+
+WARNINGS_OLD = '''\
+import torch'''
+
+WARNINGS_NEW = '''\
+import warnings
+warnings.filterwarnings('ignore')
+import torch
+'''
+
+
 def patch (name: str, path: Path, old: str, new: str):
     Logger.log(f'🔄 patching {name}...')
     with open(path) as f:
@@ -186,3 +205,5 @@ def patch_all ():
     patch('false positives', DataManager.SCRIPT_PATH, TRAIN_VAL_FP_OLD, TRAIN_VAL_FP_NEW)
     patch('validation', DataManager.SCRIPT_PATH, TRAIN_VAL_OLD, TRAIN_VAL_NEW)
     patch('utils', DataManager.SCRIPT_UTILS_PATH, UTILS_OLD, UTILS_NEW)
+    patch('export', DataManager.SCRIPT_PATH, EXPORT_OLD, EXPORT_NEW)
+    #patch('warnings', DataManager.SCRIPT_PATH, WARNINGS_OLD, WARNINGS_NEW)

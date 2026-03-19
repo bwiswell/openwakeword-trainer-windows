@@ -1,13 +1,12 @@
 from argparse import ArgumentParser
 import os
-import sys
 import warnings
-
-from .data_manager import DataManager
-from .runner import Runner
 
 os.environ['HF_HUB_VERBOSITY'] = 'error'
 warnings.filterwarnings('ignore')
+
+from .data_manager import DataManager
+from .runner import Runner
 
 
 parser = ArgumentParser()
