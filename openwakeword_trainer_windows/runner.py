@@ -5,6 +5,7 @@ from typing import Optional
 from .config import Config
 from .data_manager import DataManager
 from .logger import Logger
+from .pipeline_step import PipelineStep
 from .recorder import Recorder
 from .tts import TTS
 from .util import patch_all
@@ -83,14 +84,34 @@ class Runner:
 
 
     ### METHODS ###
-    def run (self):
-        self._ensure()
-        self._download()
-        self._unpack()
-        self._patch()
-        self._configure()
-        self._record()
-        self._tts()
-        self._augment()
-        self._train()
-        self._export()
+    def run (
+                self,
+                start_from: PipelineStep = PipelineStep.ENSURE,
+                end_at: PipelineStep = PipelineStep.EXPORT,
+                do_only: Optional[PipelineStep] = None
+            ):
+        start = start_from.value if do_only is None else do_only.value
+        end = end_at.value if do_only is None else do_only.value
+
+        for i in range(start, end + 1):
+            match PipelineStep(i):
+                case PipelineStep.ENSURE:
+                    self._ensure()
+                case PipelineStep.DOWNLOAD:
+                    self._download()
+                case PipelineStep.UNPACK:
+                    self._unpack()
+                case PipelineStep.PATCH:
+                    self._patch()
+                case PipelineStep.CONFIGURE:
+                    self._configure()
+                case PipelineStep.RECORD:
+                    self._record()
+                case PipelineStep.TTS:
+                    self._tts()
+                case PipelineStep.AUGMENT:
+                    self._augment()
+                case PipelineStep.TRAIN:
+                    self._train()
+                case PipelineStep.EXPORT:
+                    self._export()

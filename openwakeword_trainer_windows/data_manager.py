@@ -116,6 +116,10 @@ class DataManager:
         if not onnx_in.exists():
             Logger.log(f'❌ no Onnx model found')
             raise RuntimeError()
+        stats_in = self.training_path / f'{self.model}.json'
+        if not stats_in.exists():
+            Logger.log(f'❌ no stats file found')
+            raise RuntimeError()
         Logger.log('🔄 converting Onnx model to TFLite...')
         subprocess.run([
             sys.executable, '-m', 'onnx2tf',
@@ -129,10 +133,13 @@ class DataManager:
             raise RuntimeError()
         onnx_out = self.output_path / f'{self.model}.onnx'
         tflite_out = self.output_path / f'{self.model}.tflite'
+        stats_out = self.output_path / f'{self.model}.json'
         if onnx_out.exists(): os.remove(onnx_out)
         if tflite_out.exists(): os.remove(tflite_out)
+        if stats_out.exists(): os.remove(stats_out)
         os.rename(onnx_in, onnx_out)
         os.rename(tflite_in, tflite_out)
+        os.rename(stats_in, stats_out)
         Logger.log('✨ all models exported')
 
     def unpack (self):
