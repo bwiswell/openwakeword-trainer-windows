@@ -55,4 +55,9 @@ MELSPECTROGRAM_MODEL = ModelResource(
     remote = 'https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/'
 )
 
-MODEL_RESOURCES = [EMBEDDING_MODEL, MELSPECTROGRAM_MODEL]
+SILERO_VAD_MODEL = ModelResource(
+    name = 'silero_vad.onnx',
+    remote = 'https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/'
+)
+
+MODEL_RESOURCES = [EMBEDDING_MODEL, MELSPECTROGRAM_MODEL, SILERO_VAD_MODEL]

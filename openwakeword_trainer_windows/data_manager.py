@@ -9,7 +9,6 @@ from typing import Optional
 from .logger import Logger
 from .resources import (
     FEATURE_RESOURCES,
-    GIT_RESOURCES,
     MODEL_RESOURCES,
     WAV_RESOURCES
 )
@@ -22,10 +21,7 @@ class DataManager:
     DEFAULT_DATA_PATH = PARENT / 'data'
     DEFAULT_OUTPUT_PATH = PARENT / 'output'
     EX_CONF_PATH = PARENT / 'openwakeword' / 'examples' / 'custom_model.yml'
-    MODEL_PATH = PARENT / 'openwakeword' / 'openwakeword' / 'resources' / 'models'
-    SCRIPT_PATH = PARENT / 'openwakeword' / 'openwakeword' / 'train.py'
-    SCRIPT_DATA_PATH = PARENT / 'openwakeword' / 'openwakeword' / 'data.py'
-    SCRIPT_UTILS_PATH = PARENT / 'openwakeword' / 'openwakeword' / 'utils.py'
+    MODEL_PATH = PARENT / 'models'
 
     def __init__ (
                 self,
@@ -80,8 +76,6 @@ class DataManager:
     def download (self):
         Logger.log('🚀 starting resource downloads...')
         try:
-            for gr in GIT_RESOURCES:
-                gr.download(DataManager.PARENT)
             for fr in FEATURE_RESOURCES:
                 fr.download(self.resource_path)
             for mr in MODEL_RESOURCES:
@@ -95,6 +89,7 @@ class DataManager:
 
     def ensure_paths (self):
         Logger.log('🚀 (re)creating resource paths...')
+        DataManager.MODEL_PATH.mkdir(exist_ok=True)
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.cache_path.mkdir(parents=True, exist_ok=True)
         self.dataset_path.mkdir(parents=True, exist_ok=True)
@@ -145,8 +140,6 @@ class DataManager:
     def unpack (self):
         Logger.log('🚀 starting resource unpacking...')
         try:
-            for gr in GIT_RESOURCES:
-                gr.unpack(DataManager.PARENT, DataManager.PARENT)
             for fr in FEATURE_RESOURCES:
                 fr.unpack(self.resource_path, self.resource_path)
             for mr in MODEL_RESOURCES:

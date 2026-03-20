@@ -1,4 +1,8 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:poetry",
-    "python-envs.defaultPackageManager": "ms-python.python:poetry"
+    "python-envs.defaultPackageManager": "ms-python.python:poetry",
+    "python.analysis.extraPaths": [
+        "./.venv/Lib/site-packages"
+    ],
+    "python.analysis.indexing": true
 }
