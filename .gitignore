@@ -209,4 +209,6 @@ __marimo__/
 
 configs/**/*
 !configs/example.yaml
+data/**/*
 models/**/*
+outputs/**/*

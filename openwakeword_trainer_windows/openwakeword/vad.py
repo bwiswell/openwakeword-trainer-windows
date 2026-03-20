@@ -43,6 +43,8 @@
 # This file contains the implementation of a class for voice activity detection (VAD),
 # based on the pre-trained model from Silero (https://github.com/snakers4/silero-vad).
 # It can be used as with the openWakeWord library, or independently.
+#
+# NOTICE: This file has been substantially modified by Benj Wiswell.
 
 
 from collections import deque
@@ -97,7 +99,7 @@ class VAD():
 
 
     ### HELPERS ###
-    def _reset_states(self, batch_size=1):
+    def _reset_states(self, batch_size: int = 1):
         self._h = np.zeros((2, batch_size, 64)).astype('float32')
         self._c = np.zeros((2, batch_size, 64)).astype('float32')
         self._last_sr = 0
