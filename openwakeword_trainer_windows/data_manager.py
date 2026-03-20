@@ -18,7 +18,7 @@ class DataManager:
     CWD = Path(os.path.realpath(os.path.dirname(__file__)))
     PARENT = Path(os.path.realpath(CWD / '..'))
     DEFAULT_DATA_PATH = PARENT / 'data'
-    DEFAULT_OUTPUT_PATH = PARENT / 'output'
+    DEFAULT_OUTPUT_PATH = PARENT / 'outputs'
     EX_CONF_PATH = PARENT / 'openwakeword' / 'examples' / 'custom_model.yml'
     MODEL_PATH = PARENT / 'models'
 

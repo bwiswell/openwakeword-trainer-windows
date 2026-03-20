@@ -8,7 +8,6 @@ from .logger import Logger
 from .pipeline_step import PipelineStep
 from .recorder import Recorder
 from .tts import TTS
-from .util import patch_all
 
 
 class Runner:
@@ -20,7 +19,7 @@ class Runner:
                 output_dir: Optional[str] = DataManager.DEFAULT_OUTPUT_PATH
             ):
         self.dm = DataManager(model, data_dir, output_dir)
-        self.config: Config = None
+        self.config = Config(self.dm.config_path)
         
 
     ### HELPERS ###
@@ -34,12 +33,6 @@ class Runner:
         ], check=True)
         Logger.log('✨ data augmentation complete')
 
-    def _configure (self):
-        Logger.start_phase('Creating Config')
-        Logger.log('🚀 creating configuration file...')
-        self.config = Config(self.dm)
-        Logger.log('✨ configuration file created')
-
     def _download (self):
         Logger.start_phase('Downloading Resources')
         self.dm.download()
@@ -51,12 +44,6 @@ class Runner:
     def _export (self):
         Logger.start_phase('Exporting Models')
         self.dm.export()
-
-    def _patch (self):
-        Logger.start_phase('Applying Patches')
-        Logger.log('🚀 patching dependencies...')
-        patch_all()
-        Logger.log('✨ dependencies patched')
 
     def _record (self):
         Logger.start_phase('Recording Samples')
@@ -101,10 +88,6 @@ class Runner:
                     self._download()
                 case PipelineStep.UNPACK:
                     self._unpack()
-                case PipelineStep.PATCH:
-                    self._patch()
-                case PipelineStep.CONFIGURE:
-                    self._configure()
                 case PipelineStep.RECORD:
                     self._record()
                 case PipelineStep.TTS:

@@ -36,21 +36,28 @@ class TTS:
     N_KO_VOICES = 20
 
     PIPER_MODEL = 'en_US-libritts-high.onnx'
-    N_PP_VOICES = 480
+    MAX_PIPER_IDX = 903
 
-    N_VOICES = N_KO_VOICES + N_PP_VOICES
+    N_POS_PP_VOICES = 480
+    N_NEG_PP_VOICES = 380
 
-    N_POS_RESAMPLERS = 10
-    N_NEG_RESAMPLERS = 1
+    N_POS_VOICES = N_KO_VOICES + N_POS_PP_VOICES
+    N_NEG_VOICES = N_KO_VOICES + N_NEG_PP_VOICES
 
-    N_POS_PER_SPEED = N_VOICES * N_POS_RESAMPLERS
-    N_NEG_PER_SPEED = N_VOICES * N_NEG_RESAMPLERS
+    N_POS_PROSODIES = 4
+    N_NEG_PROSODIES = 1
 
-    N_NEG_TRAIN_SPEEDS = 4
+    N_POS_RESAMPLERS = 5
+    N_NEG_RESAMPLERS = 5
+
+    N_POS_PER_SPEED = N_POS_VOICES * N_POS_RESAMPLERS * N_POS_PROSODIES
+    N_NEG_PER_SPEED = N_NEG_VOICES * N_NEG_RESAMPLERS * N_NEG_PROSODIES
+
+    N_NEG_TRAIN_SPEEDS = 5
     N_NEG_TEST_SPEEDS = 1
     
-    N_NEG_TRAIN_VARS = N_VOICES * N_NEG_RESAMPLERS * N_NEG_TRAIN_SPEEDS
-    N_NEG_TEST_VARS = N_VOICES * N_NEG_RESAMPLERS * N_NEG_TEST_SPEEDS
+    N_NEG_TRAIN_VARS = N_NEG_PER_SPEED * N_NEG_TRAIN_SPEEDS
+    N_NEG_TEST_VARS = N_NEG_PER_SPEED * N_NEG_TEST_SPEEDS
 
 
     def __init__ (self, dm: DataManager):
@@ -92,6 +99,16 @@ class TTS:
 
 
     ### HELPERS ###
+    def _augment_prosodies (self, phrases: list[str]) -> list[str]:
+        augmented: list[str] = []
+        for phrase in phrases:
+            augmented.append(phrase.lower())
+            augmented.append(phrase.capitalize())
+            augmented.append(phrase.upper())
+            augmented.append(f'{phrase.capitalize()}!')
+        return augmented
+
+
     def _chunks_to_tensor (
                 self,
                 chunks: Iterable[pp.AudioChunk]
@@ -239,25 +256,29 @@ class TTS:
                 self,
                 output: Path,
                 phrases: list[str],
+                n_voices: int,
                 speeds: list[float],
                 ko_resamplers: list[ta.transforms.Resample],
                 pp_resamplers: list[ta.transforms.Resample],
                 name: str
             ):
         Logger.log(f'🔄 generating {name} samples...')
-        n = TTS.N_VOICES * len(phrases) * len(speeds) * len(ko_resamplers)
+        n = n_voices * len(phrases) * len(speeds) * len(ko_resamplers)
         pbar = tq.tqdm(total=n, desc=f'Generating {name} samples')
         idx = 0
         for p, v, s in it.product(phrases, TTS.KO_VOICES, speeds):
             generator = self.ko_pipeline(p, v, s)
             _, _, audio = next(generator)
-            for resampler in self.resamplers:
+            for resampler in ko_resamplers:
                 resampled = resampler(audio)
                 path = str(output / f'sample_{idx}.wav')
                 sf.write(path, resampled, 16000)
                 pbar.update()
                 idx += 1
-        for v, s in it.product(range(TTS.N_PP_VOICES), speeds):
+
+        n_pp_voices = n_voices - TTS.N_KO_VOICES
+        indices = np.random.randint(0, TTS.MAX_PIPER_IDX + 1, size=n_pp_voices)
+        for v, s in it.product(indices.tolist(), speeds):
             config = pp.SynthesisConfig(v, s)
             for p, resampler in it.product(phrases, pp_resamplers):
                 chunks = self.pp_pipeline.synthesize(p, config)
@@ -285,6 +306,18 @@ class TTS:
                     chars_copy[i] = replace_char
                 results.append(' '.join(chars_copy))
         return results
+    
+
+    def _random_prosodies (self, phrases: list[str]) -> list[str]:
+        randomized: list[str] = []
+        for phrase in phrases:
+            randomized.extend(np.random.choice([
+                phrase.lower(),
+                phrase.capitalize(),
+                phrase.upper(),
+                f'{phrase.capitalize()}!'
+            ], size = 1).tolist())
+        return randomized
     
 
     def _speeds (self, n: int) -> list[float]:
@@ -315,11 +348,12 @@ class TTS:
             replace=False
         ))
 
+        augmented_pos = self._augment_prosodies(config.target_phrases)
         all_phrases = [
-            config.target_phrases,
-            config.target_phrases,
-            config.negative_phrases + adv_train,
-            config.negative_phrases + adv_test
+            augmented_pos,
+            augmented_pos,
+            self._random_prosodies(config.negative_phrases + adv_train),
+            self._random_prosodies(config.negative_phrases + adv_test)
         ]
 
         n_pos_train_per_phrase = config.n_train // len(config.target_phrases)

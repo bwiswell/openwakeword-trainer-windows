@@ -41,7 +41,7 @@ This is a high-level overview of the steps that the training pipeline takes, wit
 
 ### Ensure paths (`'ensure'`):
 
-Creates the directories used for training data and pipeline outputs. **This will remove existing TTS training data from previous runs for the provided model** (but not downloaded datasets or recorded samples).
+Creates the directories used for training data and pipeline outputs, and loads the user-defined configuration file. **This will remove existing TTS training data from previous runs for the provided model** (but not downloaded datasets or recorded samples).
 
 ### Download resources (`'download'`):
 
@@ -50,14 +50,6 @@ Downloads `openwakeword`, remote training features, models, and datasets. Each d
 ### Unpack resources (`'unpack'`):
 
 Installs `openwakeword`, copies the models that `openwakeword` depends on into the appropriate directory, and extracts `.wav` training data from the downloaded datasets. Each extraction is automatically skipped if it was already performed on a prior run.
-
-### Patch `openwakeword` (`'patch'`):
-
-Applies numerous compatibility patches that allow `openwakeword` to work seamlessly on Windows in the built `poetry` environment. Each patch is automatically skipped if it was already applied.
-
-### Create configuration file (`'configure'`):
-
-Reads the data from the user-created `openwakeword-trainer-windows`-compatible `.yaml` file and builds an `openwakeword`-compatible `.yaml` configuration file to use for data augmentation and training operations.
 
 ### Record samples (`'record'`):
 

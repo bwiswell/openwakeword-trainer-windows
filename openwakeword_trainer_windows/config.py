@@ -1,3 +1,4 @@
+from pathlib import Path
 import yaml
 
 from .data_manager import DataManager
@@ -12,8 +13,8 @@ from .resources import (
 
 class Config:
 
-    def __init__ (self, dm: DataManager):
-        with open(dm.config_path, 'r') as f:
+    def __init__ (self, config_path: Path):
+        with open(config_path, 'r') as f:
             user = yaml.load(f.read(), yaml.Loader)
 
         self.model_name: str = user['model_name']
@@ -26,6 +27,7 @@ class Config:
         self.steps = user['steps']
         self.target_fp = user['target_fp']
 
+        '''
         with open(DataManager.EX_CONF_PATH, 'r') as f:
             train = yaml.load(f.read(), yaml.Loader)
 
@@ -60,3 +62,4 @@ class Config:
 
         with open(dm.train_conf_path, 'w') as f:
             yaml.dump(train, f)
+        '''

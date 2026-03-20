@@ -60,7 +60,8 @@ class Recorder:
         names = ('positive', 'negative')
         existing_records = (self.dm.n_recorded_pos, self.dm.n_recorded_neg)
         record_paths = (self.dm.record_pos_path, self.dm.record_neg_path)
-        all_phrases = (self.config.target_phrases, self.config.negative_phrases)
+        negs = self.config.negative_phrases + ['other non-target phrases']
+        all_phrases = (self.config.target_phrases, negs)
 
         for name, idx, record_path, phrases in zip(
                     names,
