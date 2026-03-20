@@ -61,14 +61,12 @@ class Recorder:
         existing_records = (self.dm.n_recorded_pos, self.dm.n_recorded_neg)
         record_paths = (self.dm.record_pos_path, self.dm.record_neg_path)
         all_phrases = (self.config.target_phrases, self.config.negative_phrases)
-        train_paths = (self.dm.pos_train, self.dm.neg_train)
 
-        for name, idx, record_path, phrases, train_path in zip(
+        for name, idx, record_path, phrases in zip(
                     names,
                     existing_records,
                     record_paths,
-                    all_phrases,
-                    train_paths
+                    all_phrases
                 ):
             Logger.log(f'🔄 recording {name} samples...')
             i = 0
@@ -81,10 +79,4 @@ class Recorder:
                     self._record(str(record_path / f'sample_{idx + i}.wav'))
                     i += 1
 
-            Logger.log(f'📦 copying {name} samples...')
-            samples = list(record_path.glob('*.wav'))
-            for i, sample in enumerate(samples):
-                out = train_path / f'sample_{i}.wav'
-                shutil.copy(str(sample), str(out))
-
-        Logger.log('✨ custom samples integrated into training set')
+        Logger.log('✨ custom validator samples recorded')

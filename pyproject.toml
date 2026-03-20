@@ -28,6 +28,8 @@ dependencies = [
     "onnx (>=1.20.1,<2.0.0)",
     "onnx2tf (>=2.3.12,<3.0.0)",
     "onnxruntime-gpu (>=1.24.4,<2.0.0)",
+    "deep-phonemizer (>=0.0.19,<0.0.20)",
+    "piper-tts (>=1.4.1,<2.0.0)",
 ]
 
 
