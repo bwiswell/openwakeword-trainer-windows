@@ -167,29 +167,84 @@ UTILS_NEW = '''\
 
 
 EXPORT_OLD = '''\
+        # Run auto training
+        best_model = oww.auto_train(
+            X_train=X_train,
+            X_val=X_val,
+            false_positive_val_data=X_val_fp,
+            steps=config["steps"],
+            max_negative_weight=config["max_negative_weight"],
+            target_fp_per_hour=config["target_false_positives_per_hour"],
+        )
+
+        # Export the trained model to onnx
+        oww.export_model(model=best_model, model_name=config["model_name"], output_dir=config["output_dir"])
+
+        # Convert the model from onnx to tflite format
         if args.convert_to_tflite:
             convert_onnx_to_tflite(os.path.join(config["output_dir"], config["model_name"] + ".onnx"),
                                    os.path.join(config["output_dir"], config["model_name"] + ".tflite"))'''
 
 EXPORT_NEW = '''\
-        '''
+        # Run auto training
+        best_model = oww.auto_train(
+            X_train=X_train,
+            X_val=X_val,
+            false_positive_val_data=X_val_fp,
+            steps=config["steps"],
+            max_negative_weight=config["max_negative_weight"],
+            target_fp_per_hour=config["target_false_positives_per_hour"],
+            stats_path=os.path.join(config["output_dir"], f'{config["model_name"]}.json')
+        )
+
+        # Export the trained model to onnx
+        oww.export_model(model=best_model, model_name=config["model_name"], output_dir=config["output_dir"])'''
+
+
+AUTO_TRAIN_OLD = '''\
+    def auto_train(self, X_train, X_val, false_positive_val_data, steps=50000, max_negative_weight=1000,
+                   target_fp_per_hour=0.2):'''
+
+AUTO_TRAIN_NEW = '''\
+    def auto_train(self, X_train, X_val, false_positive_val_data, steps=50000, max_negative_weight=1000,
+                   target_fp_per_hour=0.2, stats_path=''):'''
+
+
+STATS_OLD = '''\
+
+        return combined_model'''
+
+STATS_NEW = '''\
+
+        stats = {
+            'accuracy': combined_model_accuracy.tolist(),
+            'fpah': combined_model_fp_per_hr.tolist(),
+            'recall': combined_model_recall.tolist()
+        }
+
+        import json
+        with open(stats_path, 'w') as f:
+            json.dump(stats, f)
+
+        return combined_model'''
 
 
 WARNINGS_OLD = '''\
-import torch'''
+import torch
+from torch import optim, nn'''
 
 WARNINGS_NEW = '''\
 import warnings
 warnings.filterwarnings('ignore')
 import torch
-'''
+from torch import optim, nn'''
 
 
 def patch (name: str, path: Path, old: str, new: str):
     Logger.log(f'🔄 patching {name}...')
     with open(path) as f:
         content = f.read()
-    if old not in content:
+    if old not in content and new in content:
         Logger.log(f'✅ {name} is already patched')
     else:
         content = content.replace(old, new)
@@ -206,4 +261,6 @@ def patch_all ():
     patch('validation', DataManager.SCRIPT_PATH, TRAIN_VAL_OLD, TRAIN_VAL_NEW)
     patch('utils', DataManager.SCRIPT_UTILS_PATH, UTILS_OLD, UTILS_NEW)
     patch('export', DataManager.SCRIPT_PATH, EXPORT_OLD, EXPORT_NEW)
-    #patch('warnings', DataManager.SCRIPT_PATH, WARNINGS_OLD, WARNINGS_NEW)
+    patch('auto train', DataManager.SCRIPT_PATH, AUTO_TRAIN_OLD, AUTO_TRAIN_NEW)
+    patch('stats', DataManager.SCRIPT_PATH, STATS_OLD, STATS_NEW)
+    patch('warnings', DataManager.SCRIPT_PATH, WARNINGS_OLD, WARNINGS_NEW)

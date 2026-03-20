@@ -13,7 +13,7 @@ class Recorder:
 
     CHANNELS = 1
     CHUNK = 1024
-    DURATION = 3.0
+    DURATION = 2.0
     FORMAT = pa.paInt16
     SAMPLE_RATE = 16000
 
@@ -73,12 +73,13 @@ class Recorder:
             Logger.log(f'🔄 recording {name} samples...')
             i = 0
             for phrase in phrases:
-                cmd = input(
-                    f"[{phrase}] press ENTER to record or 'q' to quit: "
-                )
-                if cmd.lower() == 'q': continue
-                self._record(str(record_path / f'sample_{idx + i}.wav'))
-                i += 1
+                while True:
+                    cmd = input(
+                        f"[{phrase}] press ENTER to record or 'q' to quit: "
+                    )
+                    if cmd.lower() == 'q': break
+                    self._record(str(record_path / f'sample_{idx + i}.wav'))
+                    i += 1
 
             Logger.log(f'📦 copying {name} samples...')
             samples = list(record_path.glob('*.wav'))

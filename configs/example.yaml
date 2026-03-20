@@ -10,6 +10,7 @@ negative_phrases:
 
 training_samples: 1000
 testing_samples: 300
+augmentation_rounds: 1
 
 layer_size: 64
 

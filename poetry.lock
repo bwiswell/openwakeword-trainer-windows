@@ -1058,14 +1058,14 @@ files = [
 
 [[package]]
 name = "datasets"
-version = "4.8.2"
+version = "4.8.3"
 description = "HuggingFace community-driven open-source library of datasets"
 optional = false
 python-versions = ">=3.10.0"
 groups = ["main"]
 files = [
-    {file = "datasets-4.8.2-py3-none-any.whl", hash = "sha256:433a07acb2e5c7e413e54a579cf2fb161397eecb36bc1a99439f0df103f15ae5"},
-    {file = "datasets-4.8.2.tar.gz", hash = "sha256:c6ad7e6c28c7436a9c6c23f817d1a450d395c771df881252dfe63697297cbcdf"},
+    {file = "datasets-4.8.3-py3-none-any.whl", hash = "sha256:a66cb506097bfce8461b076fb9e86ea216e00fd622387ba19909d9c1689ff8f9"},
+    {file = "datasets-4.8.3.tar.gz", hash = "sha256:882fb1bb514772bec17fbcad2e32985893954d0a0ecf42266e5091386be1f3b7"},
 ]
 
 [package.dependencies]

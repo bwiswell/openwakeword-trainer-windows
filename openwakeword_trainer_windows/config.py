@@ -21,6 +21,7 @@ class Config:
         self.negative_phrases: list[str] = user['negative_phrases']
         self.n_train: int = user['training_samples']
         self.n_test: int = user['testing_samples']
+        self.augmentations: int = user['augmentation_rounds']
         self.layer_size = user['layer_size']
         self.steps = user['steps']
         self.target_fp = user['target_fp']
@@ -44,6 +45,7 @@ class Config:
         train['false_positive_validation_data_path'] = str(
             VALIDATION_FEATURES.path(dm.resource_path)
         )
+        train['augmentation_rounds'] = self.augmentations
         train['feature_data_files'] = {
             'ACAV100M_sample': str(OWW_FEATURES.path(dm.resource_path))
         }
