@@ -13,8 +13,8 @@ from .resources import (
 
 class Config:
 
-    def __init__ (self, config_path: Path):
-        with open(config_path, 'r') as f:
+    def __init__ (self, dm: DataManager):
+        with open(dm.config_path, 'r') as f:
             user = yaml.load(f.read(), yaml.Loader)
 
         self.model_name: str = user['model_name']
@@ -26,6 +26,13 @@ class Config:
         self.layer_size = user['layer_size']
         self.steps = user['steps']
         self.target_fp = user['target_fp']
+
+        self.augmentation_batch = 16
+        self.background_paths = [
+            str(AUDIOSET.path(dm.wav_path)),
+            str(FMA.path(dm.wav_path))
+        ]
+        self.rir_path = str(MIT_RIRS.path(dm.wav_path))
 
         '''
         with open(DataManager.EX_CONF_PATH, 'r') as f:

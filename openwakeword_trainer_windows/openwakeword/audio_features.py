@@ -80,16 +80,6 @@ class AudioFeatures:
     
 
     ### HELPERS ###
-    def _audio_embedding_shape (self, audio_length: float) -> tuple[int]:
-        '''
-        Returns the size of the output embedding array for a given audio clip
-        length (in seconds).
-        '''
-        n_samples = int(audio_length * 16000)
-        x = (np.random.uniform(-1, 1, n_samples) * 32767).astype(np.int16)
-        return self._audio_embeddings(x).shape
-    
-
     def _audio_embeddings(
                 self,
                 x: npt.NDArray[np.int16]
@@ -441,3 +431,13 @@ class AudioFeatures:
         )
 
         return embeddings
+    
+    
+    def get_embedding_shape (self, audio_length: float) -> tuple[int]:
+        '''
+        Returns the size of the output embedding array for a given audio clip
+        length (in seconds).
+        '''
+        n_samples = int(audio_length * 16000)
+        x = (np.random.uniform(-1, 1, n_samples) * 32767).astype(np.int16)
+        return self._audio_embeddings(x).shape
