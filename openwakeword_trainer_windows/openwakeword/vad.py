@@ -68,7 +68,7 @@ class VAD():
         sessionOptions.inter_op_num_threads = 1
         sessionOptions.intra_op_num_threads = 1
         self.model = ort.InferenceSession(
-            str(dm.MODEL_PATH / 'silero_vad.onnx'),
+            dm.models.silero_vad_model,
             sess_options = sessionOptions,
             providers = ["CPUExecutionProvider"]
         )

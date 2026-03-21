@@ -8,7 +8,7 @@ import datasets as ds
 import huggingface_hub as hf
 import soundfile as sf
 
-from ..logger import Logger
+from ...logger import Logger
 
 from .resource import Resource
 
@@ -98,5 +98,3 @@ MIT_RIRS = WavResource(
     parquets = 1,
     wavs = 270
 )
-
-WAV_RESOURCES = [AUDIOSET, FMA, MIT_RIRS]

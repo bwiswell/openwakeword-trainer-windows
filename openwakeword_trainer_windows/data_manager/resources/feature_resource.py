@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib import request
 
-from ..logger import Logger
+from ...logger import Logger
 
 from .resource import Resource
 
@@ -47,5 +47,3 @@ VALIDATION_FEATURES = FeatureResource(
     name = 'validation_set_features.npy',
     remote = 'https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/'
 )
-
-FEATURE_RESOURCES = [OWW_FEATURES, VALIDATION_FEATURES]

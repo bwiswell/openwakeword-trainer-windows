@@ -5,11 +5,15 @@ import subprocess
 import sys
 from typing import Optional
 
-from .logger import Logger
-from .resources import (
-    FEATURE_RESOURCES,
-    MODEL_RESOURCES,
-    WAV_RESOURCES
+from ..logger import Logger
+
+from .data_specs import (
+    FeatureData,
+    ModelData,
+    RecordingData,
+    TrainingData,
+    TTSData,
+    WavData
 )
 
 
@@ -19,8 +23,6 @@ class DataManager:
     PARENT = Path(os.path.realpath(CWD / '..'))
     DEFAULT_DATA_PATH = PARENT / 'data'
     DEFAULT_OUTPUT_PATH = PARENT / 'outputs'
-    EX_CONF_PATH = PARENT / 'openwakeword' / 'examples' / 'custom_model.yml'
-    MODEL_PATH = PARENT / 'models'
 
     def __init__ (
                 self,
@@ -30,7 +32,7 @@ class DataManager:
             ):
         self.model = model
         self.data_path = Path(data_dir)
-        self.output_path = Path(output_dir)
+        self.output_path = Path(output_dir) / model
 
         self.cache_path = self.data_path / 'datasets' / 'cache'
         self.dataset_path = self.data_path / 'datasets'
@@ -38,71 +40,46 @@ class DataManager:
         self.wav_path = self.data_path / 'wavs'
 
         self.config_path = DataManager.PARENT / 'configs' / f'{model}.yaml'
+        self.feature_path = self.data_path / 'features' / model
+        self.recording_path = self.data_path / 'recordings' / model
+        self.training_path = self.data_path / 'training' / model
+        self.tts_path = self.data_path / 'tts' / model
 
-        self.record_path = self.data_path / 'recordings' / model
-        self.record_pos_path = self.record_path / 'positive'
-        self.record_neg_path = self.record_path / 'negative'
-
-        self.train_path = self.data_path / 'training' / model
-        self.train_conf_path = self.train_path / f'{model}.yaml'
-        self.training_path = self.data_path / 'training'
-
-        self.pos_train = self.train_path / 'positive_train'
-        self.neg_train = self.train_path / 'negative_train'
-        self.pos_test = self.train_path / 'positive_test'
-        self.neg_test = self.train_path / 'negative_test'
-
-
-    ### PROPERTIES ###
-    @property
-    def n_train_neg (self) -> int:
-        return len(list(self.neg_train.glob('*.wav')))
-    
-    @property
-    def n_train_pos (self) -> int:
-        return len(list(self.pos_train.glob('*.wav')))
-
-    @property
-    def n_recorded_neg (self) -> int:
-        return len(list(self.record_neg_path.glob('*.wav')))
-    
-    @property
-    def n_recorded_pos (self) -> int:
-        return len(list(self.record_pos_path.glob('*.wav')))
+        self.features = FeatureData(self.resource_path, self.feature_path)
+        self.models = ModelData(self.resource_path)
+        self.output = str(self.output_path)
+        self.recordings = RecordingData(self.recording_path)
+        self.training = TrainingData(self.training_path)
+        self.tts = TTSData(self.tts_path)
+        self.wavs = WavData(self.dataset_path, self.wav_path)
 
 
     ### METHODS ###
     def download (self):
         Logger.log('🚀 starting resource downloads...')
         try:
-            for fr in FEATURE_RESOURCES:
-                fr.download(self.resource_path)
-            for mr in MODEL_RESOURCES:
-                mr.download(self.resource_path)
-            for wr in WAV_RESOURCES:
-                wr.download(self.dataset_path)
+            self.features.download()
+            self.models.download()
+            self.wavs.download()
         except Exception as e:
             Logger.log(f'❌ failed to download resources')
             raise e
         Logger.log('✨ all resources downloaded')
 
+
     def ensure_paths (self):
         Logger.log('🚀 (re)creating resource paths...')
-        DataManager.MODEL_PATH.mkdir(exist_ok=True)
-        self.output_path.mkdir(parents=True, exist_ok=True)
+        if self.output_path.exists(): shutil.rmtree(self.output_path)
+        self.output_path.mkdir(parents=True)
         self.cache_path.mkdir(parents=True, exist_ok=True)
-        self.dataset_path.mkdir(parents=True, exist_ok=True)
-        self.record_pos_path.mkdir(parents=True, exist_ok=True)
-        self.record_neg_path.mkdir(parents=True, exist_ok=True)
-        self.resource_path.mkdir(parents=True, exist_ok=True)
-        if self.train_path.exists(): shutil.rmtree(self.train_path)
-        self.train_path.mkdir(parents=True)
-        self.pos_train.mkdir()
-        self.neg_train.mkdir()
-        self.pos_test.mkdir()
-        self.neg_test.mkdir()
-        self.wav_path.mkdir(parents=True, exist_ok=True)
+        self.features.ensure()
+        self.models.ensure()
+        self.recordings.ensure()
+        self.training.ensure()
+        self.tts.ensure()
+        self.wavs.ensure()
         Logger.log('✨ all resources paths created')
+
 
     def export (self):
         Logger.log('🚀 exporting models...')
@@ -136,15 +113,11 @@ class DataManager:
         os.rename(stats_in, stats_out)
         Logger.log('✨ all models exported')
 
+
     def unpack (self):
         Logger.log('🚀 starting resource unpacking...')
         try:
-            for fr in FEATURE_RESOURCES:
-                fr.unpack(self.resource_path, self.resource_path)
-            for mr in MODEL_RESOURCES:
-                mr.unpack(self.resource_path, DataManager.MODEL_PATH)
-            for wr in WAV_RESOURCES:
-                wr.unpack(self.dataset_path, self.wav_path)
+            self.wavs.unpack()
         except Exception as e:
             Logger.log(f'❌ failed to unpack resources')
             raise e

@@ -2,13 +2,6 @@ from pathlib import Path
 import yaml
 
 from .data_manager import DataManager
-from .resources import (
-    AUDIOSET,
-    FMA,
-    MIT_RIRS,
-    OWW_FEATURES,
-    VALIDATION_FEATURES
-)
 
 
 class Config:
@@ -28,29 +21,16 @@ class Config:
         self.target_fp = user['target_fp']
 
         self.augmentation_batch = 16
-        self.background_paths = [
-            str(AUDIOSET.path(dm.wav_path)),
-            str(FMA.path(dm.wav_path))
-        ]
-        self.rir_path = str(MIT_RIRS.path(dm.wav_path))
+        self.background_paths = [dm.wavs.audioset, dm.wavs.fma]
+        self.rir_path = dm.wavs.rirs
+
+        self.feature_data = {
+            'ACAV100M': (1024, dm.features.acav),
+            'negative': (50, dm.features.neg_train),
+            'positive': (50, dm.features.pos_train),
+        }
 
         '''
-        with open(DataManager.EX_CONF_PATH, 'r') as f:
-            train = yaml.load(f.read(), yaml.Loader)
-
-        train['model_name'] = self.model_name
-        train['target_phrase'] = self.target_phrases
-        train['custom_negative_phrases'] = self.negative_phrases
-        train['n_samples'] = self.n_train
-        train['n_samples_val'] = self.n_test
-        train.pop('piper_sample_generator_path', None)
-        train['output_dir'] = str(dm.training_path)
-        train['rir_paths'] = [str(MIT_RIRS.path(dm.wav_path))]
-        train['background_paths'] = [
-            str(AUDIOSET.path(dm.wav_path)),
-            str(FMA.path(dm.wav_path))
-        ]
-        train['background_paths_duplication_rate'] = [1, 1]
         train['false_positive_validation_data_path'] = str(
             VALIDATION_FEATURES.path(dm.resource_path)
         )

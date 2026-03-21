@@ -33,14 +33,18 @@ class AudioFeatures:
     A class for creating audio features from audio data, including
     melspectograms and Google's `speech_embedding` features.
     '''
-    def __init__(self, n_cpus: int):
+    def __init__(self, dm: DataManager, device: str = 'cpu', n_cpus: int = 1):
+        self.device = device
         self.n_cpus = n_cpus
 
-        self.embedding_path = DataManager.MODEL_PATH / 'embedding_model.onnx'
-        self.melspec_path = DataManager.MODEL_PATH / 'melspectrogram.onnx'
+        self.embedding_path = dm.models.embedding_model
+        self.melspec_path = dm.models.melspec_model
 
         options = ort.SessionOptions()
-        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+        if device == 'cpu':
+            providers = ['CPUExecutionProvider']
+        else:
+            providers = ['CUDAExecutionProvider']
         self.embedding_model = ort.InferenceSession(
             self.embedding_path,
             options,

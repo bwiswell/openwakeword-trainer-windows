@@ -25,6 +25,7 @@ import shutil
 import tempfile
 import time
 from typing import Generator
+from uuid import uuid4
 
 import audiomentations as am
 import numpy as np
@@ -39,6 +40,7 @@ import tqdm as tq
 
 from ..config import Config
 from ..data_manager import DataManager
+from ..logger import Logger
 
 from .audio_features import AudioFeatures
 
@@ -79,13 +81,13 @@ class Augmenter:
     def _augment_batch (
                 self,
                 name: str,
-                filename: str,
-                path: Path,
+                path: str,
                 total_length: int,
                 background_clip_paths: list[str],
                 rir_paths: list[str],
                 n_cpus: int
             ):
+        Logger.log(f'🔄 augmenting {name} features...')
         clips, count = self._get_clips(path)
         generator = self._augment_clips(
             clips,
@@ -94,8 +96,7 @@ class Augmenter:
             background_clip_paths,
             rir_paths
         )
-        out_path = os.path.join(str(self.dm.train_path), filename)
-        temp_path = self._get_temp(filename)
+        temp_path = self._get_temp()
         self._compute_features(
             name,
             generator,
@@ -105,9 +106,11 @@ class Augmenter:
             n_cpus
         )
         self._trim(temp_path)
-        if os.path.exists(out_path):
-            os.remove(out_path)
-        shutil.move(temp_path, out_path)
+        Logger.log(f'✅ {name} successfully augmented')
+        Logger.log(f'🔄 writing {name} features...')
+        if os.path.exists(path): os.remove(path)
+        shutil.move(temp_path, path)
+        Logger.log(f'✅ {name} successfully written')
 
 
     def _augment_clips (
@@ -264,7 +267,7 @@ class Augmenter:
         else:
             device = 'cpu'
 
-        af = AudioFeatures(device)
+        af = AudioFeatures(self.dm, device)
         n_cols = af.get_embedding_shape(total_length / 16000)
         out_shape = (n_total, *n_cols)
         fp = open_memmap(
@@ -373,7 +376,7 @@ class Augmenter:
     
 
     def _get_temp (self, name: str):
-        return os.path.join(tempfile.gettempdir(), name)
+        return os.path.join(tempfile.gettempdir(), f'{uuid4()}.npy')
     
 
     def _trim (self, path: str):
@@ -405,8 +408,7 @@ class Augmenter:
         
         self._augment_batch(
             'positive training',
-            'positive_features_train.npy',
-            self.dm.pos_train,
+            self.dm.features.pos_train,
             total_length,
             bg_paths,
             rir_paths,
@@ -415,8 +417,7 @@ class Augmenter:
 
         self._augment_batch(
             'positive testing',
-            'positive_features_test.npy',
-            self.dm.pos_test,
+            self.dm.features.pos_test,
             total_length,
             bg_paths,
             rir_paths,
@@ -425,8 +426,7 @@ class Augmenter:
 
         self._augment_batch(
             'negative training',
-            'negative_features_train.npy',
-            self.dm.neg_train,
+            self.dm.features.neg_train,
             total_length,
             bg_paths,
             rir_paths,
@@ -435,8 +435,7 @@ class Augmenter:
 
         self._augment_batch(
             'negative testing',
-            'negative_features_test.npy',
-            self.dm.neg_test,
+            self.dm.features.neg_test,
             total_length,
             bg_paths,
             rir_paths,

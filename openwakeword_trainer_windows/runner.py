@@ -5,6 +5,7 @@ from typing import Optional
 from .config import Config
 from .data_manager import DataManager
 from .logger import Logger
+from .openwakeword import Augmenter
 from .pipeline_step import PipelineStep
 from .recorder import Recorder
 from .tts import TTS
@@ -19,18 +20,15 @@ class Runner:
                 output_dir: Optional[str] = DataManager.DEFAULT_OUTPUT_PATH
             ):
         self.dm = DataManager(model, data_dir, output_dir)
-        self.config = Config(self.dm.config_path)
+        self.config = Config(self.dm)
         
 
     ### HELPERS ###
     def _augment (self):
         Logger.start_phase('Augmenting Data')
         Logger.log('🚀 starting data augmentation...')
-        subprocess.run([
-            sys.executable, str(DataManager.SCRIPT_PATH),
-            '--training_config', str(self.dm.train_conf_path),
-            '--augment_clips'
-        ], check=True)
+        aug = Augmenter(self.config, self.dm)
+        aug.augment()
         Logger.log('✨ data augmentation complete')
 
     def _download (self):

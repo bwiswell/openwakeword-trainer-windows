@@ -6,6 +6,7 @@ import re
 from dp.phonemizer import Phonemizer
 import kokoro as ko
 import numpy as np
+import os
 import piper as pp
 import pronouncing as pr
 import soundfile as sf
@@ -67,7 +68,7 @@ class TTS:
             repo_id = 'hexgrad/Kokoro-82M'
         )
         self.pp_pipeline = pp.PiperVoice.load(
-            str(dm.MODEL_PATH / TTS.PIPER_MODEL),
+            dm.models.piper_tts_model,
             use_cuda = True
         )
 
@@ -161,9 +162,7 @@ class TTS:
         # Setup
         all_words = list(set(' '.join(input_phrases).split()))
         word_adversaries: dict[str, list[str]] = {}
-        phonemizer = Phonemizer.from_checkpoint(
-            str(DataManager.MODEL_PATH / 'en_us_cmudict_forward.pt')
-        )
+        phonemizer = Phonemizer.from_checkpoint(self.dm.models.deep_phonemizer)
 
         # Get adversaries for each word
         for word in all_words:
@@ -254,7 +253,7 @@ class TTS:
     
     def _generate_batch (
                 self,
-                output: Path,
+                output: str,
                 phrases: list[str],
                 n_voices: int,
                 speeds: list[float],
@@ -271,7 +270,7 @@ class TTS:
             _, _, audio = next(generator)
             for resampler in ko_resamplers:
                 resampled = resampler(audio)
-                path = str(output / f'sample_{idx}.wav')
+                path = os.path.join(output, f'sample_{idx}.wav')
                 sf.write(path, resampled, 16000)
                 pbar.update()
                 idx += 1
@@ -284,7 +283,7 @@ class TTS:
                 chunks = self.pp_pipeline.synthesize(p, config)
                 audio = self._chunks_to_tensor(chunks)
                 resampled = resampler(audio)
-                path = str(output / f'sample_{idx}.wav')
+                path = os.path.join(output, f'sample_{idx}.wav')
                 sf.write(path, resampled, 16000)
                 pbar.update()
                 idx += 1
@@ -329,10 +328,10 @@ class TTS:
         Logger.log('🚀 starting sample generation...')
 
         paths = [
-            self.dm.pos_train,
-            self.dm.pos_test,
-            self.dm.neg_train,
-            self.dm.neg_test
+            self.dm.tts.pos_train,
+            self.dm.tts.pos_test,
+            self.dm.tts.neg_train,
+            self.dm.tts.neg_test
         ]
 
         n_adv_train = (config.n_train // TTS.N_NEG_TRAIN_VARS)

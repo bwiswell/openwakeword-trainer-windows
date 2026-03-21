@@ -58,10 +58,16 @@ class Recorder:
         Logger.log('🚀 recording custom samples...')
 
         names = ('positive', 'negative')
-        existing_records = (self.dm.n_recorded_pos, self.dm.n_recorded_neg)
-        record_paths = (self.dm.record_pos_path, self.dm.record_neg_path)
-        negs = self.config.negative_phrases + ['other non-target phrases']
-        all_phrases = (self.config.target_phrases, negs)
+        existing_records = (
+            self.dm.recordings.n_positive, self.dm.recordings.n_negative
+        )
+        record_paths = (
+            self.dm.recordings.positive, self.dm.recordings.negative
+        )
+        all_phrases = (
+            self.config.target_phrases,
+            self.config.negative_phrases + ['other non-target phrases']
+        )
 
         for name, idx, record_path, phrases in zip(
                     names,
