@@ -24,11 +24,9 @@ class Config:
         self.background_paths = [dm.wavs.audioset, dm.wavs.fma]
         self.rir_path = dm.wavs.rirs
 
-        self.feature_data = {
-            'ACAV100M': (1024, dm.features.acav),
-            'negative': (50, dm.features.neg_train),
-            'positive': (50, dm.features.pos_train),
-        }
+        self.acav_per_batch = 1024
+        self.negative_per_batch = 50
+        self.positive_per_batch = 50
 
         '''
         train['false_positive_validation_data_path'] = str(
