@@ -57,22 +57,12 @@ from ..data_manager import DataManager
 
 
 class VAD():
-    """
+    '''
     A model class for a voice activity detection (VAD) based on Silero's model:
 
     https://github.com/snakers4/silero-vad
-    """
+    '''
     def __init__(self, dm: DataManager):
-        """
-        Initialize the VAD model object.
-
-        Parameters:
-            model_path (str):
-                The path to the Silero VAD ONNX model.
-            n_threads (int):
-                The number of threads to use for the VAD model.
-        """
-
         # Initialize the ONNX model
         sessionOptions = ort.SessionOptions()
         sessionOptions.inter_op_num_threads = 1
@@ -107,7 +97,7 @@ class VAD():
 
 
     def _predict(self, x: npt.NDArray[np.float_], frame_size: int = 480):
-        """
+        '''
         Get the VAD predictions for the input audio frame.
 
         Parameters:
@@ -125,7 +115,7 @@ class VAD():
         Returns
             **score** (`float`):
                 The average predicted score for the audio frame.
-        """
+        '''
         chunks = [(x[i:i+frame_size]/32767).astype(np.float32)
                   for i in range(0, x.shape[0], frame_size)]
 
