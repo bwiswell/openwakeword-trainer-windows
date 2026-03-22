@@ -67,10 +67,6 @@ Augments the user-recorded and TTS-generated training samples by mixing them wit
 
 Trains the `openwakeword` model using the user-provided `.yaml` configuration and the recorded/generated training samples.
 
-### Export models/stats (`'export'`):
-
-Converts the resulting `.onnx` model to `.tflite` and moves both `.onnx` and `.tflite` results to the output directory (along with a `.json` file containing accuracy, false positive rate, and recall metrics).
-
 
 ## Note
 

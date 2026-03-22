@@ -9,4 +9,3 @@ class PipelineStep(Enum):
     TTS = 4
     AUGMENT = 5
     TRAIN = 6
-    EXPORT = 7

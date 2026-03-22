@@ -39,10 +39,6 @@ class Runner:
         Logger.start_phase('Ensuring Paths')
         self.dm.ensure_paths()
 
-    def _export (self):
-        Logger.start_phase('Exporting Models')
-        self.dm.export()
-
     def _record (self):
         Logger.start_phase('Recording Samples')
         recorder = Recorder(self.config, self.dm)
@@ -72,7 +68,7 @@ class Runner:
     def run (
                 self,
                 start_from: PipelineStep = PipelineStep.ENSURE,
-                end_at: PipelineStep = PipelineStep.EXPORT,
+                end_at: PipelineStep = PipelineStep.TRAIN,
                 do_only: Optional[PipelineStep] = None
             ):
         start = start_from.value if do_only is None else do_only.value
@@ -94,5 +90,3 @@ class Runner:
                     self._augment()
                 case PipelineStep.TRAIN:
                     self._train()
-                case PipelineStep.EXPORT:
-                    self._export()

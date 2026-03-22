@@ -20,7 +20,9 @@
 from collections import defaultdict
 import copy
 import json
-from pathlib import Path
+import shutil
+import subprocess
+import sys
 from typing import Optional
 
 import numpy as np
@@ -103,6 +105,36 @@ class Trainer(to.nn.Module):
         averaged_model.load_state_dict(averaged_model_dict)
 
         return averaged_model
+
+
+    def _export (self, model: Network):
+        Logger.log('🔄 exporting Onnx model...')
+        out_model = copy.deepcopy(model)
+        to.onnx.export(
+            out_model.to('cpu'),
+            to.rand(self.input_shape)[None, ],
+            self.dm.outputs.onnx_export,
+            opset_version = 13
+        )
+        Logger.log(f'✅ Onnx model exported')
+        Logger.log('🔄 converting Onnx model to TFLite...')
+        subprocess.run([
+            sys.executable, '-m', 'onnx2tf',
+            '-i', self.dm.outputs.onnx_export,
+            '-o', self.dm.outputs.exports,
+            '-tb', 'flatbuffer_direct'
+        ], check=True)
+        Logger.log(f'✅ TFLite model exported')
+        Logger.log('🔄 moving models to output directory...')
+        shutil.copy(
+            self.dm.outputs.onnx_export,
+            self.dm.outputs.onnx_output
+        )
+        shutil.copy(
+            self.dm.outputs.tflite_export,
+            self.dm.outputs.tflite_output
+        )
+        Logger.log(f'✅ Models successfully exported')
 
 
     def _get_input_shape (self) -> tuple[int]:
@@ -460,18 +492,7 @@ class Trainer(to.nn.Module):
             'recall': combined_model_recall.tolist()
         }
 
-        with open(self.dm.stats, 'w') as f:
+        with open(self.dm.outputs.stats, 'w') as f:
             json.dump(stats, f)
 
-        return combined_model
-
-
-
-    def export (self, model: Network, name: str, output_dir: Path):
-        out_model = copy.deepcopy(model)
-        to.onnx.export(
-            out_model.to('cpu'),
-            to.rand(self.input_shape)[None, ],
-            str(output_dir / f'{name}.onnx'),
-            opset_version = 13
-        )
+        self._export(combined_model)
