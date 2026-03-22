@@ -49,6 +49,7 @@ class DataManager:
         self.models = ModelData(self.resource_path)
         self.output = str(self.output_path)
         self.recordings = RecordingData(self.recording_path)
+        self.stats = str(self.output_path / 'stats.json')
         self.training = TrainingData(self.training_path)
         self.tts = TTSData(self.tts_path)
         self.wavs = WavData(self.dataset_path, self.wav_path)

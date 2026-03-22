@@ -16,9 +16,9 @@ class Config:
         self.n_train: int = user['training_samples']
         self.n_test: int = user['testing_samples']
         self.augmentations: int = user['augmentation_rounds']
-        self.layer_size = user['layer_size']
-        self.steps = user['steps']
-        self.target_fp = user['target_fp']
+        self.layer_size: int = user['layer_size']
+        self.steps: int = user['steps']
+        self.target_fp: float = user['target_fp']
 
         self.augmentation_batch = 16
         self.background_paths = [dm.wavs.audioset, dm.wavs.fma]
@@ -27,6 +27,8 @@ class Config:
         self.acav_per_batch = 1024
         self.negative_per_batch = 50
         self.positive_per_batch = 50
+
+        self.max_neg_weight = 1500
 
         '''
         train['false_positive_validation_data_path'] = str(
