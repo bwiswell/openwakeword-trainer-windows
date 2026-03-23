@@ -267,7 +267,7 @@ class Augmenter:
         else:
             device = 'cpu'
 
-        af = AudioFeatures(self.dm, device)
+        af = AudioFeatures(device=device, model_path=self.dm.resource_path)
         n_cols = af.get_embedding_shape(total_length / 16000)
         out_shape = (n_total, *n_cols)
         fp = open_memmap(

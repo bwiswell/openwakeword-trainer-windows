@@ -43,12 +43,12 @@ DEEP_PHONEMIZER = ModelResource(
     remote = 'https://public-asai-dl-models.s3.eu-central-1.amazonaws.com/DeepPhonemizer/'
 )
 
-EMBEDDING_MODEL = ModelResource(
+EMBEDDING_ONNX = ModelResource(
     name = 'embedding_model.onnx',
     remote = 'https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/'
 )
 
-MELSPEC_MODEL = ModelResource(
+MELSPEC_ONNX = ModelResource(
     name = 'melspectrogram.onnx',
     remote = 'https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/'
 )

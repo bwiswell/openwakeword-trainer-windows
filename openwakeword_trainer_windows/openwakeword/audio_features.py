@@ -19,13 +19,16 @@
 
 from collections import deque
 from multiprocessing.pool import ThreadPool
-from typing import Deque, Optional
+from pathlib import Path
+from typing import Callable, Deque, Optional
 
 import numpy as np
 import numpy.typing as npt
-import onnxruntime as ort
 
-from ..data_manager import DataManager
+from .common import InferenceFramework, InferenceFrameworkError
+
+
+PredictFn = Callable[[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
 
 
 class AudioFeatures:
@@ -33,28 +36,29 @@ class AudioFeatures:
     A class for creating audio features from audio data, including
     melspectograms and Google's `speech_embedding` features.
     '''
-    def __init__(self, dm: DataManager, device: str = 'cpu', n_cpus: int = 1):
+
+    DEFAULT_MODEL_PATH = Path(__file__).parent.absolute() / 'resources'
+
+    def __init__(
+                self,
+                n_cpus: int = 1,
+                inference_framework: InferenceFramework = 'onnx',
+                device: str = 'cpu',
+                model_path: Path = DEFAULT_MODEL_PATH
+            ):
         self.device = device
+        self.model_path = model_path
         self.n_cpus = n_cpus
 
-        self.embedding_path = dm.models.embedding_model
-        self.melspec_path = dm.models.melspec_model
-
-        options = ort.SessionOptions()
-        if device == 'cpu':
-            providers = ['CPUExecutionProvider']
+        if inference_framework == 'onnx':
+            emb_pred, mel_pred = self._get_onnx_predictors()
+        elif inference_framework == 'tflite':
+            emb_pred, mel_pred = self._get_tflite_predictors()
         else:
-            providers = ['CUDAExecutionProvider']
-        self.embedding_model = ort.InferenceSession(
-            self.embedding_path,
-            options,
-            providers
-        )
-        self.melspec_model = ort.InferenceSession(
-            self.melspec_path,
-            options,
-            providers
-        )
+            raise InferenceFrameworkError(inference_framework)
+
+        self._embeddings_predict = emb_pred
+        self._melspec_predict = mel_pred
 
         # Create databuffers with empty/random data
         # Sample rate * 10
@@ -70,12 +74,6 @@ class AudioFeatures:
         )
         # ~10 seconds of feature buffer history
         self.feature_buffer_max_len = 120
-
-
-    ### PROPERTIES ###
-    @property
-    def execution_provider (self) -> str:
-        return self.embedding_model.get_providers()[0]
 
 
     ### MAGIC METHODS ###
@@ -188,13 +186,142 @@ class AudioFeatures:
             pool.close()
 
         return embeddings
-        
+    
 
-    def _embeddings_predict (
-                self,
-                x: npt.NDArray[np.float32]
-            ) -> npt.NDArray[np.float32]:
-        return self.embedding_model.run(None, { 'input_1': x})[0].squeeze()
+    def _get_onnx_predictors (self) -> tuple[PredictFn, PredictFn]:
+        try:
+            import onnxruntime as ort
+        except ImportError:
+            raise InferenceFrameworkError('onnx')
+
+        embedding_path = str(self.model_path / 'embedding_model.onnx')
+        melspec_path = str(self.model_path / 'melspectrogram.onnx')
+
+        # TODO: check for model existence and auto-download if not found
+
+        options = ort.SessionOptions()
+        options.inter_op_num_threads = self.n_cpus
+        options.intra_op_num_threads = self.n_cpus
+        if self.device == 'cpu':
+            providers = ['CPUExecutionProvider']
+        else:
+            providers = ['CUDAExecutionProvider']
+
+        self.embedding_model = ort.InferenceSession(
+            embedding_path,
+            options,
+            providers
+        )
+
+        self.execution_provider = self.embedding_model.get_providers()[0]
+        
+        def embeddings_predict (
+                    x: npt.NDArray[np.float32]
+                ) -> npt.NDArray[np.float32]:
+            return self.embedding_model.run(None, { 'input_1': x})[0].squeeze()
+
+        self.melspec_model = ort.InferenceSession(
+            melspec_path,
+            options,
+            providers
+        )
+
+        def melspec_predict (
+                    x: npt.NDArray[np.float32]
+                ) -> npt.NDArray[np.float32]:
+            return self.melspec_model.run(None, { 'input': x })
+        
+        return embeddings_predict, melspec_predict
+    
+
+    def _get_tflite_predictors (self) -> tuple[PredictFn, PredictFn]:
+        try:
+            import ai_edge_litert.interpreter as tfl
+        except ImportError:
+            raise InferenceFrameworkError('tflite')
+
+        embedding_path = str(self.model_path / 'embedding_model.tflite')
+        melspec_path = str(self.model_path / 'melspectrogram.tflite')
+
+        # TODO: check for model existence and auto-download if not found
+
+        self.embedding_model = tfl.Interpreter(
+            model_path = embedding_path,
+            num_threads = self.n_cpus
+        )
+        self.embedding_model.allocate_tensors()
+
+        embedding_input_details = self.embedding_model.get_input_details()
+        embedding_input_idx = embedding_input_details[0]['index']
+        embedding_output_details = self.embedding_model.get_output_details()
+        embedding_output_idx = embedding_output_details[0]['index']
+        self._tflite_embedding_batch_size = 1
+        
+        def embeddings_predict (
+                    x: npt.NDArray[np.float32]
+                ) -> npt.NDArray[np.float32]:
+            if x.shape[0] != 1:
+                self.embedding_model.resize_tensor_input(
+                    input_index= 0,
+                    tensor_size = [x.shape[0], 76, 32, 1],
+                    strict = True
+                )
+                self.embedding_model.allocate_tensors()
+                self._tflite_embedding_batch_size = x.shape[0]
+            elif self._tflite_embedding_batch_size != 1:
+                self.embedding_model.resize_tensor_input(
+                    input_index = 0,
+                    tensor_size = [1, 76, 32, 1],
+                    strict = True
+                )
+                self.embedding_model.allocate_tensors()
+                self._tflite_embedding_batch_size = x.shape[0]
+
+            self.embedding_model.set_tensor(embedding_input_idx, x)
+            self.embedding_model.invoke()
+            return self.embedding_model.get_tensor(
+                embedding_output_idx
+            ).squeeze()
+
+        self.melspec_model = tfl.Interpreter(
+            model_path = melspec_path,
+            num_threads = self.n_cpus
+        )
+        self.melspec_model.resize_tensor_input(0, [1, 1280], strict=True)
+        self.melspec_model.allocate_tensors()
+
+        melspec_input_details = self.melspec_model.get_input_details()
+        melspec_input_idx = melspec_input_details[0]['index']
+        melspec_output_details = self.melspec_model.get_output_details()
+        melspec_output_idx = melspec_output_details[0]['index']
+
+        self._tflite_melspec_input_size = 1280
+
+        def melspec_predict (
+                    x: npt.NDArray[np.float32]
+                ) -> npt.NDArray[np.float32]:
+            if x.shape[1] != 1280:
+                self.melspec_model.resize_tensor_input(
+                    input_index = 0,
+                    tensor_size = [1, x.shape[1]],
+                    strict=True
+                )
+                self.melspec_model.allocate_tensors()
+                self._tflite_melspec_input_size = x.shape[1]
+            elif self._tflite_melspec_input_size != 1280:
+                self.melspec_model.resize_tensor_input(
+                    input_index = 0,
+                    tensor_size = [1, 1280],
+                    strict=True
+                )
+                self.melspec_model.allocate_tensors()
+                self._tflite_melspec_input_size = 1280
+
+            self.melspec_model.set_tensor(melspec_input_idx, x)
+            self.melspec_model.invoke()
+            return self.melspec_model.get_tensor(melspec_output_idx)
+        
+        return embeddings_predict, melspec_predict
 
 
     def _melspec (self, x: npt.NDArray[np.int16]) -> npt.NDArray[np.float32]:
@@ -299,13 +426,6 @@ class AudioFeatures:
             melspec = melspec[None, ]
         embedding = self._embeddings_predict(melspec)
         return embedding
-    
-
-    def _melspec_predict (
-                self,
-                x: npt.NDArray[np.float32]
-            ) -> npt.NDArray[np.float32]:
-        return self.melspec_model.run(None, { 'input': x })
 
 
     def _reset(self):

@@ -4,8 +4,8 @@ from .feature_resource import (
 )
 from .model_resource import (
     DEEP_PHONEMIZER,
-    EMBEDDING_MODEL,
-    MELSPEC_MODEL,
+    EMBEDDING_ONNX,
+    MELSPEC_ONNX,
     PIPER_TTS_JSON,
     PIPER_TTS_ONNX,
     SILERO_VAD_MODEL
