@@ -1,0 +1,26 @@
+[project]
+name = "openwakeword-inferencer"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Benj Wiswell",email = "benjwiswell@gmail.com"}
+]
+requires-python = ">=3.12,<4.0.0"
+dependencies = [
+    "numpy (>=2.4.3,<3.0.0)",
+    "requests (>=2.33.0,<3.0.0)",
+    "scikit-learn (>=1.8.0,<2.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project.optional-dependencies]
+onnx = [
+    "onnxruntime (>=1.24.4,<2.0.0)"
+]
+tflite = [
+    "ai-edge-litert (>=2.1.3,<3.0.0)"
+]

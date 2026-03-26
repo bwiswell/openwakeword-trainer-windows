@@ -195,8 +195,6 @@ class AudioFeatures:
         embedding_path = str(self.model_path / 'embedding_model.onnx')
         melspec_path = str(self.model_path / 'melspectrogram.onnx')
 
-        # TODO: check for model existence and auto-download if not found
-
         options = ort.SessionOptions()
         options.inter_op_num_threads = self.n_cpus
         options.intra_op_num_threads = self.n_cpus
@@ -240,8 +238,6 @@ class AudioFeatures:
 
         embedding_path = str(self.model_path / 'embedding_model.tflite')
         melspec_path = str(self.model_path / 'melspectrogram.tflite')
-
-        # TODO: check for model existence and auto-download if not found
 
         self.embedding_model = tfl.Interpreter(
             model_path = embedding_path,
@@ -426,16 +422,6 @@ class AudioFeatures:
         return embedding
 
 
-    def _reset(self):
-        self.raw_data_buffer.clear()
-        self.melspectrogram_buffer = np.ones((76, 32))
-        self.accumulated_samples = 0
-        self.raw_data_remainder = np.empty(0)
-        self.feature_buffer = self._audio_embeddings(
-            np.random.randint(-1000, 1000, 16000*4).astype(np.int16)
-        )
-
-
     def _streaming_features (self, x: npt.NDArray[np.int16]) -> int:
         '''
         Adds raw audio data to the buffer, temporarily storing extra frames if
@@ -563,3 +549,32 @@ class AudioFeatures:
         n_samples = int(audio_length * 16000)
         x = (np.random.uniform(-1, 1, n_samples) * 32767).astype(np.int16)
         return self._audio_embeddings(x).shape
+    
+
+    def get_features(
+                self,
+                n_feature_frames: int = 16,
+                start_idx: int = -1
+            ) -> npt.NDArray[np.float32]:
+        if start_idx != -1:
+            if start_idx + n_feature_frames != 0:
+                end_idx = start_idx + n_feature_frames
+            else:
+                end_idx = len(self.feature_buffer)
+            return self.feature_buffer[start_idx:end_idx, :][None, ].astype(
+                np.float32
+            )
+        else:
+            return self.feature_buffer[-1*n_feature_frames:, :][None, ].astype(
+                np.float32
+            )
+
+
+    def reset(self):
+        self.raw_data_buffer.clear()
+        self.melspectrogram_buffer = np.ones((76, 32))
+        self.accumulated_samples = 0
+        self.raw_data_remainder = np.empty(0)
+        self.feature_buffer = self._audio_embeddings(
+            np.random.randint(-1000, 1000, 16000*4).astype(np.int16)
+        )

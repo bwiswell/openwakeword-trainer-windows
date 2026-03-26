@@ -48,12 +48,12 @@
 
 
 from collections import deque
+from pathlib import Path
 
-import onnxruntime as ort
 import numpy as np
 import numpy.typing as npt
 
-from ..data_manager import DataManager
+from .common import InferenceFrameworkError
 
 
 class VAD():
@@ -62,13 +62,18 @@ class VAD():
 
     https://github.com/snakers4/silero-vad
     '''
-    def __init__(self, dm: DataManager):
+    def __init__(self, model_path: Path):
+        try:
+            import onnxruntime as ort
+        except ImportError:
+            raise InferenceFrameworkError('onnx')
+        
         # Initialize the ONNX model
         sessionOptions = ort.SessionOptions()
         sessionOptions.inter_op_num_threads = 1
         sessionOptions.intra_op_num_threads = 1
         self.model = ort.InferenceSession(
-            dm.models.silero_vad_model,
+            str(model_path / 'silero_vad.onnx'),
             sess_options = sessionOptions,
             providers = ["CPUExecutionProvider"]
         )

@@ -207,8 +207,8 @@ marimo/_lsp/
 __marimo__/
 
 
-configs/**/*
-!configs/example.yaml
-data/**/*
-models/**/*
-outputs/**/*
+openwakeword-trainer/configs/**/*
+!openwakeword-trainer/configs/example.yaml
+openwakeword-trainer/data/**/*
+openwakeword-trainer/models/**/*
+openwakeword-trainer/outputs/**/*

@@ -1,5 +1,5 @@
 [project]
-name = "openwakeword-trainer-windows"
+name = "openwakeword-trainer"
 version = "0.1.0"
 description = ""
 authors = [
