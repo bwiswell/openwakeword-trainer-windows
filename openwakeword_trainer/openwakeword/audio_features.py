@@ -37,14 +37,12 @@ class AudioFeatures:
     melspectograms and Google's `speech_embedding` features.
     '''
 
-    DEFAULT_MODEL_PATH = Path(__file__).parent.absolute() / 'resources'
-
     def __init__(
                 self,
+                model_path: Path,
                 n_cpus: int = 1,
                 inference_framework: InferenceFramework = 'onnx',
-                device: str = 'cpu',
-                model_path: Path = DEFAULT_MODEL_PATH
+                device: str = 'cpu'
             ):
         self.device = device
         self.model_path = model_path
